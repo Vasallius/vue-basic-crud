@@ -44,7 +44,31 @@ const logoutuser = () => {
 }
 
 function removeTodo(id) {
+  // Remove from local state
   todos.value = todos.value.filter((todo) => todo.id !== id)
+
+  // Sync with server
+  fetch('http://localhost:3000/deleteTodo', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      id: id,
+      email: user.value.email // pass the actual user email here
+    })
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.message === 'Todo removed successfully!') {
+        console.log('Todo deleted from server.')
+      } else {
+        console.error('Failed to delete todo from server: ', data.message)
+      }
+    })
+    .catch((error) => {
+      console.error('Error:', error)
+    })
 }
 
 async function addTodo() {

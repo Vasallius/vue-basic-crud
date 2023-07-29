@@ -81,11 +81,35 @@ app.post("/addTodo", async (req, res) => {
   }
 });
 
-//   const dataToPush = { id: newid, text: todo.Vjjvalue, done: false }
-//   const docRef = db.collection("todos").doc(userEmail);
+app.delete("/deleteTodo", async (req, res) => {
+  const { id, email } = req.body;
+  console.log(id, email);
+  try {
+    const docRef = db.collection("todos").doc(email);
 
-//     // Try to retrieve the document
-//   const doc = await docRef.get();
+    // Get the document
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(400).json({ message: "User does not exist" });
+    }
+
+    // Get the todos array from the document
+    const todos = doc.data().todos;
+
+    // Remove the task from the todos array
+    const updatedTodos = todos.filter((todo) => todo.id !== id);
+
+    // Update the todos array in the document
+    await docRef.update({ todos: updatedTodos });
+
+    // Send response
+    return res.status(200).json({ message: "Todo removed successfully!" });
+  } catch (err) {
+    console.error("Error interacting with database: ", err);
+    res.status(500).send("Error interacting with database" + err);
+  }
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
