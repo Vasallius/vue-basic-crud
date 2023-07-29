@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
+const { FieldValue } = admin.firestore;
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const port = 3000;
 
@@ -52,6 +54,35 @@ app.get("/:userEmail", async (req, res) => {
     res.status(500).send("Error interacting with database: " + err);
   }
 });
+app.post("/addTodo", async (req, res) => {
+  console.log(req.body);
+  const { todo, email } = req.body;
+  try {
+    const docRef = db.collection("todos").doc(email);
+
+    const doc = await docRef.get();
+
+    // Check if the document exists
+    // Document exists, use the data
+    console.log(email);
+    const dataToPush = { id: Math.random(), text: todo, done: false };
+
+    docRef.update({
+      todos: FieldValue.arrayUnion(dataToPush),
+    });
+
+    res.status(200).json({ message: "User exists!", data: doc.data() });
+  } catch (err) {
+    console.error("Error interacting with database: ", err);
+    res.status(500).send("Error interacting with database: " + err);
+  }
+});
+
+//   const dataToPush = { id: newid, text: todo.Vjjvalue, done: false }
+//   const docRef = db.collection("todos").doc(userEmail);
+
+//     // Try to retrieve the document
+//   const doc = await docRef.get();
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

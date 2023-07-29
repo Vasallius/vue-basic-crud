@@ -1,5 +1,4 @@
 <template>
-  {{ user }}
   <div v-if="isAuthenticated">
     <p>What would you like to do today, {{ user.name }} ?</p>
     <div>
@@ -13,7 +12,6 @@
       <span v-else>{{ todoItem.text }}</span>
       <button v-if="editingTodo === todoItem.id" @click="updateTodo">Save</button>
     </div>
-    <div>{{ data }}</div>
     <button @click="logoutuser">LOG OUT</button>
   </div>
   <div v-else>
@@ -49,16 +47,30 @@ function removeTodo(id) {
   todos.value = todos.value.filter((todo) => todo.id !== id)
 }
 
-function addTodo() {
+async function addTodo() {
   if (todo.value.length === 0) {
     return
   }
-  todos.value.push({
-    id: todos.value.length + 1,
-    text: todo.value,
-    done: false
+  const response = await fetch('http://localhost:3000/addTodo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ todo: todo.value, email: user.value.email })
   })
-  todo.value = ''
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  const data = await response.json()
+  console.log(data)
+  // todos.value.push({
+  //   id: newid,
+  //   text: todo.value,
+  //   done: false
+  // })
+  // todo.value = ''
 }
 
 function editTodo(todoItem) {
