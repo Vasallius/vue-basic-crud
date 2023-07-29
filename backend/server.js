@@ -65,7 +65,7 @@ app.post("/addTodo", async (req, res) => {
     // Document exists, use the data
     const dataToPush = { id: Math.random(), text: todo, done: false };
 
-    docRef.update({
+    await docRef.update({
       todos: FieldValue.arrayUnion(dataToPush),
     });
 
