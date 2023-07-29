@@ -6,7 +6,6 @@
       <input type="text" name="addTodo" v-model="todo" placeholder="add new todo.." />
       <button @click="addTodo">Add</button>
     </div>
-    value
     <div v-for="todoItem in todos" :key="todoItem.id">
       <button @click="editTodo(todoItem)">Edit</button>
       <button @click="removeTodo(todoItem.id)">Clear Todo</button>
@@ -14,7 +13,6 @@
       <span v-else>{{ todoItem.text }}</span>
       <button v-if="editingTodo === todoItem.id" @click="updateTodo">Save</button>
     </div>
-    <div>TEST</div>
     <div>{{ data }}</div>
     <button @click="logoutuser">LOG OUT</button>
   </div>
@@ -26,38 +24,26 @@
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue'
 import { ref } from 'vue'
+
+const todo = ref('')
+const todos = ref([])
+const editingTodo = ref(null)
+
 const { loginWithPopup, user, isAuthenticated, logout } = useAuth0()
 
 const login = async () => {
   await loginWithPopup()
-  console.log('after popup')
-  console.log(user, isAuthenticated)
   if (isAuthenticated) {
-    console.log(user.value.email)
     const response = await fetch(`http://localhost:3000/${user.value.email}`)
     const data = await response.json()
-    console.log(data)
+    console.log(data.data)
+    todos.value = data.data.todos
   }
 }
 
 const logoutuser = () => {
   logout()
 }
-
-const todo = ref('')
-const todos = ref([
-  {
-    id: 1,
-    text: 'Learn Vue 3',
-    done: true
-  },
-  {
-    id: 2,
-    text: 'Learn TypeScript',
-    done: false
-  }
-])
-const editingTodo = ref(null)
 
 function removeTodo(id) {
   todos.value = todos.value.filter((todo) => todo.id !== id)

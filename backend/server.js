@@ -40,7 +40,7 @@ app.get("/:userEmail", async (req, res) => {
       };
       // Document doesn't exist, create it
       await docRef.set(newUser);
-      res.status(200).json({ message: "New user created!", data: newUser });
+      res.status(200).json({ message: "New user created!", data: [] });
     } else {
       // Document exists, use the data
       console.log(userEmail);
