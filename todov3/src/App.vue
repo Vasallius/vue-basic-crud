@@ -58,13 +58,15 @@ async function addTodo() {
     },
     body: JSON.stringify({ todo: todo.value, email: user.value.email })
   })
-
+  todo.value = ''
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
   }
 
   const data = await response.json()
   console.log(data)
+  todos.value = data.data.todos
+  console.log(todos.value)
   // todos.value.push({
   //   id: newid,
   //   text: todo.value,

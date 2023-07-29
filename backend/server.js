@@ -55,7 +55,6 @@ app.get("/:userEmail", async (req, res) => {
   }
 });
 app.post("/addTodo", async (req, res) => {
-  console.log(req.body);
   const { todo, email } = req.body;
   try {
     const docRef = db.collection("todos").doc(email);
@@ -64,14 +63,18 @@ app.post("/addTodo", async (req, res) => {
 
     // Check if the document exists
     // Document exists, use the data
-    console.log(email);
     const dataToPush = { id: Math.random(), text: todo, done: false };
 
     docRef.update({
       todos: FieldValue.arrayUnion(dataToPush),
     });
 
-    res.status(200).json({ message: "User exists!", data: doc.data() });
+    const docRef2 = db.collection("todos").doc(email);
+
+    const updatedDoc = await docRef2.get();
+    const updatedData = updatedDoc.data();
+    console.log(updatedData);
+    res.status(200).json({ message: "User exists!", data: updatedData });
   } catch (err) {
     console.error("Error interacting with database: ", err);
     res.status(500).send("Error interacting with database: " + err);
