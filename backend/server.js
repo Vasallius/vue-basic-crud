@@ -14,18 +14,38 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-app.get("/", async (req, res) => {
+
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "HELLOf WORLD" });
+});
+
+app.get("/:userEmail", async (req, res) => {
   try {
-    // Do db CRUD operations...
-    // Example: Create a new document
-    const todosRef = db.collection("todos").doc("qoeMYF44A7uSE5umndhn");
-    const doc = await todosRef.get();
+    // Get user email from the route parameters
+    let userEmail = req.params.userEmail;
+
+    // Define the users collection and the document reference
+    const docRef = db.collection("todos").doc(userEmail);
+
+    // Try to retrieve the document
+    const doc = await docRef.get();
+
+    // Check if the document exists
     if (!doc.exists) {
-      console.log("No such document!");
-      res.status(404).send("No such document!");
+      console.log(userEmail);
+      console.log("No such document! Creating one now.");
+      const newUser = {
+        todos: [],
+        // You can add more fields here
+      };
+      // Document doesn't exist, create it
+      await docRef.set(newUser);
+      res.status(200).json({ message: "New user created!", data: newUser });
     } else {
+      // Document exists, use the data
+      console.log(userEmail);
       console.log("Document data:", doc.data());
-      res.status(200).json({ message: "Hello World!", data: doc.data() });
+      res.status(200).json({ message: "User exists!", data: doc.data() });
     }
   } catch (err) {
     console.error("Error interacting with database: ", err);
