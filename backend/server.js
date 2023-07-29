@@ -83,7 +83,6 @@ app.post("/addTodo", async (req, res) => {
 
 app.delete("/deleteTodo", async (req, res) => {
   const { id, email } = req.body;
-  console.log(id, email);
   try {
     const docRef = db.collection("todos").doc(email);
 

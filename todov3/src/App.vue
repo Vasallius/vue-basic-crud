@@ -90,12 +90,6 @@ async function addTodo() {
   todos.value = data.data.todos
 
   todo.value = ''
-  // todos.value.push({
-  //   id: newid,
-  //   text: todo.value,
-  //   done: false
-  // })
-  // todo.value = ''
 }
 
 function editTodo(todoItem) {
