@@ -96,8 +96,36 @@ function editTodo(todoItem) {
   editingTodo.value = todoItem.id
 }
 
-function updateTodo() {
+async function updateTodo() {
+  const updatedTodo = todos.value.find((todo) => todo.id === editingTodo.value)
+  if (!updatedTodo) return
+
+  // Save local changes by resetting "editingTodo" state
   editingTodo.value = null
+
+  // Sync with the server
+  const response = await fetch('http://localhost:3000/editTodo', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      id: updatedTodo.id,
+      text: updatedTodo.text,
+      email: user.value.email
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  const data = await response.json()
+  if (data.message === 'Todo updated successfully!') {
+    console.log('Todo updated on server.')
+  } else {
+    console.error('Failed to update todo on server: ', data.message)
+  }
 }
 </script>
 

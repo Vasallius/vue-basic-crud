@@ -109,7 +109,39 @@ app.delete("/deleteTodo", async (req, res) => {
     res.status(500).send("Error interacting with database" + err);
   }
 });
+app.post("/editTodo", async (req, res) => {
+  const { id, text, email } = req.body;
+  try {
+    const docRef = db.collection("todos").doc(email);
 
+    // Get the document
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(400).json({ message: "User does not exist" });
+    }
+
+    // Get the todos array from the document
+    let todos = doc.data().todos;
+
+    // Find the todo item and replace it
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        return { ...todo, text: text };
+      }
+      return todo;
+    });
+
+    // Update the todos array in the doc
+    await docRef.update({ todos: updatedTodos });
+
+    // Returning the HTTP response
+    return res.status(200).json({ message: "Todo updated successfully!" });
+  } catch (err) {
+    console.error("Error interacting with database: ", err);
+    res.status(500).send("Error interacting with database" + err);
+  }
+});
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
