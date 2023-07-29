@@ -10,10 +10,23 @@
     <span v-else>{{ todoItem.text }}</span>
     <button v-if="editingTodo === todoItem.id" @click="updateTodo">Save</button>
   </div>
+  <div>TEST</div>
+  <div>{{ data }}</div>
+  <button @click="login">LOGIN</button>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useAuth0 } from '@auth0/auth0-vue'
+import { onMounted, ref } from 'vue'
+const { loginWithRedirect } = useAuth0()
+loginWithRedirect()
+const data = ref('lol')
+const fetchData = async () => {
+  const response = await fetch('http://localhost:3000/')
+  data.value = await response.json()
+  console.log(data.value)
+}
+onMounted(fetchData)
 
 const todo = ref('')
 const todos = ref([
