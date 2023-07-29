@@ -1,9 +1,12 @@
 <template>
+  {{ user }}
   <div v-if="isAuthenticated">
+    <p>What would you like to do today, {{ user.name }} ?</p>
     <div>
       <input type="text" name="addTodo" v-model="todo" placeholder="add new todo.." />
       <button @click="addTodo">Add</button>
     </div>
+    value
     <div v-for="todoItem in todos" :key="todoItem.id">
       <button @click="editTodo(todoItem)">Edit</button>
       <button @click="removeTodo(todoItem.id)">Clear Todo</button>
@@ -18,31 +21,28 @@
   <div v-else>
     <button @click="login">LOGIN</button>
   </div>
-  <div>
-    {{ user }}
-  </div>
 </template>
 
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue'
 import { ref } from 'vue'
-// const { loginWithRedirect } = useAuth0()
 const { loginWithPopup, user, isAuthenticated, logout } = useAuth0()
 
-const login = () => {
-  loginWithPopup()
+const login = async () => {
+  await loginWithPopup()
+  console.log('after popup')
+  console.log(user, isAuthenticated)
+  if (isAuthenticated) {
+    console.log(user.value.email)
+    const response = await fetch(`http://localhost:3000/${user.value.email}`)
+    const data = await response.json()
+    console.log(data)
+  }
 }
 
 const logoutuser = () => {
   logout()
 }
-// const data = ref('lol')
-// const fetchData = async () => {
-//   const response = await fetch('http://localhost:3000/')
-//   data.value = await response.json()
-//   console.log(data.value)
-// }
-// onMounted(fetchData)
 
 const todo = ref('')
 const todos = ref([
