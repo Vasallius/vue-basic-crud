@@ -41,4 +41,4 @@ node server.js
 
 ## Usage
 
-Once the development server and backend are running, open your web browser and go to http://localhost:8080 to access the Vue.js application. Here, you can log in, add, edit, and delete todo items.
+Once the development server and backend are running, open your web browser and go to http://localhost:5173 to access the Vue.js application. Here, you can log in, add, edit, and delete todo items.
