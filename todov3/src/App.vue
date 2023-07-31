@@ -1,27 +1,28 @@
 <template>
   <div v-if="isAuthenticated">
-    <p>What would you like to do today, {{ user.name }} ?</p>
+    <p>What would you like to do today, {{ user.name }}?</p>
     <div>
       <input type="text" name="addTodo" v-model="todo" placeholder="add new todo.." />
-      <button @click="addTodo">Add</button>
+      <button @click="addNewTodo">Add</button>
     </div>
     <div v-for="todoItem in todos" :key="todoItem.id">
-      <button @click="editTodo(todoItem)">Edit</button>
-      <button @click="removeTodo(todoItem.id)">Clear Todo</button>
+      <button @click="editTodoItem(todoItem)">Edit</button>
+      <button @click="removeTodoItem(todoItem.id)">Clear Todo</button>
       <input v-if="editingTodo === todoItem.id" type="text" v-model="todoItem.text" />
       <span v-else>{{ todoItem.text }}</span>
-      <button v-if="editingTodo === todoItem.id" @click="updateTodo">Save</button>
+      <button v-if="editingTodo === todoItem.id" @click="updateTodoItem">Save</button>
     </div>
-    <button @click="logoutuser">LOG OUT</button>
+    <button @click="logoutUser">LOG OUT</button>
   </div>
   <div v-else>
     <button @click="login">LOGIN</button>
   </div>
 </template>
-
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue'
 import { ref } from 'vue'
+
+const API_BASE_URL = 'http://localhost:3000'
 
 const todo = ref('')
 const todos = ref([])
@@ -30,103 +31,118 @@ const editingTodo = ref(null)
 const { loginWithPopup, user, isAuthenticated, logout } = useAuth0()
 
 const login = async () => {
-  await loginWithPopup()
-  if (isAuthenticated) {
-    const response = await fetch(`http://localhost:3000/${user.value.email}`)
-    const data = await response.json()
-    console.log(data.data)
-    todos.value = data.data.todos
+  try {
+    await loginWithPopup()
+    if (isAuthenticated) {
+      const response = await fetch(`${API_BASE_URL}/${user.value.email}`)
+      const data = await response.json()
+      console.log(data.data)
+      todos.value = data.data.todos
+    }
+  } catch (error) {
+    console.error('Error during login:', error)
   }
 }
 
-const logoutuser = () => {
+const logoutUser = () => {
   logout()
 }
 
-function removeTodo(id) {
-  // Remove from local state
-  todos.value = todos.value.filter((todo) => todo.id !== id)
+const removeTodoItem = async (id) => {
+  try {
+    // Remove from local state
+    todos.value = todos.value.filter((todo) => todo.id !== id)
 
-  // Sync with server
-  fetch('http://localhost:3000/deleteTodo', {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id: id,
-      email: user.value.email // pass the actual user email here
+    // Sync with server
+    const response = await fetch(`${API_BASE_URL}/deleteTodo`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: id,
+        email: user.value.email // pass the actual user email here
+      })
     })
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.message === 'Todo removed successfully!') {
-        console.log('Todo deleted from server.')
-      } else {
-        console.error('Failed to delete todo from server: ', data.message)
-      }
-    })
-    .catch((error) => {
-      console.error('Error:', error)
-    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    if (data.message === 'Todo removed successfully!') {
+      console.log('Todo deleted from server.')
+    } else {
+      console.error('Failed to delete todo from server: ', data.message)
+    }
+  } catch (error) {
+    console.error('Error while removing todo:', error)
+  }
 }
 
-async function addTodo() {
-  if (todo.value.length === 0) {
-    return
-  }
-  const response = await fetch('http://localhost:3000/addTodo', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ todo: todo.value, email: user.value.email })
-  })
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
-  }
+const addNewTodo = async () => {
+  try {
+    if (todo.value.length === 0) {
+      return
+    }
+    const response = await fetch(`${API_BASE_URL}/addTodo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ todo: todo.value, email: user.value.email })
+    })
 
-  const data = await response.json()
-  todos.value = data.data.todos
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
 
-  todo.value = ''
+    const data = await response.json()
+    todos.value = data.data.todos
+
+    todo.value = ''
+  } catch (error) {
+    console.error('Error while adding todo:', error)
+  }
 }
 
-function editTodo(todoItem) {
+const editTodoItem = (todoItem) => {
   editingTodo.value = todoItem.id
 }
 
-async function updateTodo() {
-  const updatedTodo = todos.value.find((todo) => todo.id === editingTodo.value)
-  if (!updatedTodo) return
+const updateTodoItem = async () => {
+  try {
+    const updatedTodo = todos.value.find((todo) => todo.id === editingTodo.value)
+    if (!updatedTodo) return
 
-  // Save local changes by resetting "editingTodo" state
-  editingTodo.value = null
+    // Save local changes by resetting "editingTodo" state
+    editingTodo.value = null
 
-  // Sync with the server
-  const response = await fetch('http://localhost:3000/editTodo', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      id: updatedTodo.id,
-      text: updatedTodo.text,
-      email: user.value.email
+    // Sync with the server
+    const response = await fetch(`${API_BASE_URL}/editTodo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: updatedTodo.id,
+        text: updatedTodo.text,
+        email: user.value.email
+      })
     })
-  })
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
 
-  const data = await response.json()
-  if (data.message === 'Todo updated successfully!') {
-    console.log('Todo updated on server.')
-  } else {
-    console.error('Failed to update todo on server: ', data.message)
+    const data = await response.json()
+    if (data.message === 'Todo updated successfully!') {
+      console.log('Todo updated on server.')
+    } else {
+      console.error('Failed to update todo on server: ', data.message)
+    }
+  } catch (error) {
+    console.error('Error while updating todo:', error)
   }
 }
 </script>
-
-<style scoped></style>
